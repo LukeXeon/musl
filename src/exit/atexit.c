@@ -85,7 +85,14 @@ static void call(void *p)
 	((void (*)(void))(uintptr_t)p)();
 }
 
+/* [rosetta 补丁 0004] atexit 定义移除 —— 嵌入式形态的链接驱动(NDK
+ * clang)恒带 crtbegin_so.o,其中 atexit 是强定义、实现同型(= 转
+ * `__cxa_atexit(f,0,__dso_handle)`);两处强定义在同一 .so 内撞名。
+ * 保留本文件的 `__cxa_atexit`(musl 退出登记表的真入口,crtbegin 的
+ * atexit 与 C++ 静态析构都落到它),仅去掉重复的裸名。 */
+#if 0
 int atexit(void (*func)(void))
 {
 	return __cxa_atexit(call, (void *)(uintptr_t)func, 0);
 }
+#endif

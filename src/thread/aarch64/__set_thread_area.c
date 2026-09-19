@@ -3,9 +3,16 @@
 
 #define BITRANGE(a,b) (2*(1UL<<(b))-(1UL<<(a)))
 
+/* [rosetta 补丁 0003] thread pointer 写侧 —— 上游 msr tpidr_el0(真
+ * 寄存器);嵌入式形态改落 rosetta per-TID 表(shim/src/slibc/musl_tls.rs),
+ * 真寄存器归宿主语言运行时(与补丁 0002 成对)。返回 0 = 成功且允许
+ * 线程(上游 __init_tp 依此置 libc.can_do_threads)。 */
+extern int rosetta_guest_musl_set_tp(void *);
+
 int __set_thread_area(void *p)
 {
-	__asm__ __volatile__ ("msr tpidr_el0,%0" : : "r"(p) : "memory");
+	int r = rosetta_guest_musl_set_tp(p);
+	if (r < 0) return r;
 
 	/* Mask off hwcap bits for SME and unknown future features. This is
 	 * necessary because SME is not safe to use without libc support for
