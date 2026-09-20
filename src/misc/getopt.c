@@ -7,8 +7,13 @@
 #include "locale_impl.h"
 #include "stdio_impl.h"
 
-char *optarg;
-int optind=1, opterr=1, optopt, __optpos, __optreset=0;
+// [rosetta 补丁 0006] optarg/optind/opterr/optopt 的唯一定义点归
+// box64 globalsymbols(guest ABI 存储;wrapped getopt 与 guest 直读
+// 共享一处——R9 双存储不同步的形态自此终结);本件只留内部件,
+// 全量归档下双定义(objcopy 同名撞车)随之消除。
+extern char *optarg;
+extern int optind, opterr, optopt;
+int __optpos, __optreset=0;
 
 #define optpos __optpos
 weak_alias(__optreset, optreset);
